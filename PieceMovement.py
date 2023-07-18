@@ -6,11 +6,15 @@ WHITE, BLACK = 'w', 'b'
 PAWN, BISHOP, KNIGHT, ROOK, QUEEN, KING = 'p', 'B', 'N', 'R', 'Q', 'K'
 
 class Piece:
-    def __init__(self, p, name):
+    def __init__(self, p:str, name:str):
         self.picture = p
         self.name = name
         self.piecelist = []
         self.value = 0
+    def __str__(self) -> str:
+        return f"{self.colour}{self.name}"
+    def __repr__(self) -> str:
+        return str(self)+str(self.piecelist)
 
 
 class boardState:
@@ -61,7 +65,7 @@ def emptyboard():
     for i in range(64): boardlist[i] = 0
 
 # Looks up the piece in the pieceIds dictionary
-def getPiece(pId):
+def getPiece(pId)->Piece:
     return pieceIds[pId]
 
 
@@ -73,7 +77,7 @@ def updatepieces():
         if not(pieceId): continue
         getPiece(pieceId).piecelist.append(num)
 
-def updatepiecesfast(changed):
+def updatepiecesfast(changed:list):
     for i in changed:
         p = getPiece(i)
         toAdd = [] if changed[i][1]==-1 else [changed[i][1]]
@@ -110,17 +114,19 @@ def resetgame():
 
 
 # Converts sqr to a number for ease of calculation (sqr is a string coord)
-def coordtonum(sqr):
+def coordtonum(sqr:str)->int:
     return 8 * (int(sqr[1]) - 1) + ord(sqr[0]) - 97
 
 
 # Converts num back to a coordinate
-def numtocoord(num):
-    return chr(num%8 + 97) + str((num/8)+1)
+def numtocoord(num:int)->str:
+    if num==None:
+        return None
+    return chr(int(num%8 + 97)) + str(int((num//8)+1))
 
 
 # Returns the piece on square num
-def pieceatsqr(num):
+def pieceatsqr(num:int)->Piece|None:
     if num > 63 or num < 0:
         return None
     s = boardlist[num]
@@ -128,14 +134,14 @@ def pieceatsqr(num):
 
 
 # Changes the value of the piece on start to end
-def ChangeVar(start, end):
+def ChangeVar(start:int, end:int):
     j = pieceatsqr(start)
     boardlist[start] = 0
     boardlist[end] = id(j)
 
 
 # Checks if a pawn has made it to the eighth/first rank
-def pawnPromoted(end):
+def pawnPromoted(end:int)->bool:
     s = numtocoord(end)
     pce = pieceatsqr(end)
     if (s[1] == '8' and pce == wp) or (s[1] == '1' and pce == bp):
@@ -144,7 +150,7 @@ def pawnPromoted(end):
 
 
 # Moves the piece on start to end
-def MovePiece(start, end, update=True):
+def MovePiece(start:int, end:int, update=True)->Piece|None:
     j = pieceatsqr(start)
     m = pieceatsqr(end)
 
@@ -206,7 +212,7 @@ def MovePiece(start, end, update=True):
 
 
 # Checks if each side can still castle
-def updateCastlingRights():
+def updateCastlingRights()->tuple:
     if boardlist[4] != id(wk):
         curState.ws, curState.wl = False, False
     if boardlist[60] != id(bk):
@@ -219,7 +225,10 @@ def updateCastlingRights():
         curState.ws = False
     if boardlist[63] != id(br):
         curState.bs = False
-
+    return (curState.wl, curState.ws),(curState.bl, curState.bs)
+#en-passantsqr id if there is one
+def getEnPassante()->int|None:
+    return curState.enPassant
 
 # Undoes the previous move made
 def UndoMove(update=True):
@@ -237,7 +246,7 @@ def UndoMove(update=True):
 
     
 #helper
-def rookMovement(i):
+def rookMovement(i:int)->list:
     p = []
     for x in range(i-8,-1,-8):
         p.append(x)
@@ -260,7 +269,7 @@ def rookMovement(i):
     return p
 
 #helper
-def bishopMovement(i):
+def bishopMovement(i:int)->list:
     p =[]
     for x in range(i-9,-1,-9):
         if x%8 == 7: break
@@ -285,7 +294,7 @@ def bishopMovement(i):
     return p
 
 #helper
-def kingMovement(sqr, i):
+def kingMovement(sqr:str, i:int)->list:
     m, n = sqr[0], sqr[1]
     p = []
     if m != 'a':
@@ -307,7 +316,7 @@ def kingMovement(sqr, i):
     return p
 
 #helper
-def knightMovement(sqr, i):
+def knightMovement(sqr:str, i:int)->list:
     m, n = sqr[0], sqr[1]
     p = []
     if m != 'a' and m != 'b':
@@ -333,7 +342,7 @@ def knightMovement(sqr, i):
     return p
 
 # Returns a list of squares that are valid moves for the piece on square i
-def PieceMovement(i):
+def PieceMovement(i:int)->list|filter|None:
     j = pieceatsqr(i)
     sqr = numtocoord(i)
     m, n = sqr[0], sqr[1]
@@ -419,7 +428,7 @@ def PieceMovement(i):
 
 
 # Danger Functions
-def PawnDanger(i, colour):
+def PawnDanger(i:int, colour:str)->bool|None:
     if colour == WHITE:
         if i <= 47 and i % 8 != 7 and boardlist[i+9] == id(bp):
             return True
@@ -431,7 +440,7 @@ def PawnDanger(i, colour):
         if i >= 16 and i % 8 != 7 and boardlist[i-7] == id(wp):
             return True
 
-def KnightDanger(sqr, colour):
+def KnightDanger(sqr:int, colour:str)->bool|None:
     if colour == WHITE:
         knight = id(bn)
     else:
@@ -440,7 +449,7 @@ def KnightDanger(sqr, colour):
         if boardlist[y] == knight:
             return True
 
-def KingDanger(sqr, colour):
+def KingDanger(sqr:int, colour:str)->bool|None:
     if colour == WHITE:
         king = id(bk)
     else:
@@ -449,7 +458,7 @@ def KingDanger(sqr, colour):
         if boardlist[y] == king:
             return True
 
-def BigPieceDanger(sqr, colour):
+def BigPieceDanger(sqr:int, colour:str)->bool|None:
     if colour == WHITE:
         rook, bishop, queen = id(br), id(bb), id(bq)
     else:
@@ -462,7 +471,7 @@ def BigPieceDanger(sqr, colour):
             return True
 
 # Determines whether a move can get you killed
-def isSafe(sqr, colour, *exclude):
+def isSafe(sqr:int, colour:str, *exclude)->bool:
     if not('P' in exclude) and PawnDanger(sqr, colour):
         return False
     if not('N' in exclude) and KnightDanger(sqr, colour):
@@ -475,7 +484,7 @@ def isSafe(sqr, colour, *exclude):
 
 
 # determines whether the 'colour' king is in check
-def isInCheck(colour):
+def isInCheck(colour:str)->bool:
     if colour == WHITE:
         kingsqr = wk.piecelist[0]
     elif colour == BLACK:
@@ -484,7 +493,7 @@ def isInCheck(colour):
 
 
 # same as isInCheck except it manually finds kingsqr
-def isInCheckMod(colour):
+def isInCheckMod(colour:str)->bool:
     if colour == WHITE:
         king = id(wk)
     elif colour == BLACK:
@@ -497,7 +506,7 @@ def isInCheckMod(colour):
 
 
 # determines whether colour is in checkmate, stalemate or neither
-def isMated(colour, threshold=32):
+def isMated(colour:int, threshold=32)->bool|str:
     inCheck = isInCheck(colour)
     if not(inCheck) and curState.numPieces > threshold:
         return False
@@ -516,7 +525,7 @@ def isMated(colour, threshold=32):
 
 
 # Returns the boardState i states ago
-def prev(i, state):
+def prev(i:int, state:boardState)->boardState:
     if i == 0 or not(state):
         return None
     if i <= 1:
@@ -525,7 +534,7 @@ def prev(i, state):
 
 
 # Determines whether the current position has been consecutively repeated three times
-def isRepitition():
+def isRepitition()->bool:
     tempState = prev(3, curState)
     tempState2 = prev(2, tempState)
     if tempState and tempState2:
@@ -535,7 +544,7 @@ def isRepitition():
 
 
 # Determines whether the game is a draw by insufficient material
-def isInsufficient():
+def isInsufficient()->bool:
     if len(wp.piecelist) > 0 or len(bp.piecelist) > 0:
         return False
     elif len(wq.piecelist) > 0 or len(bq.piecelist) > 0:
@@ -552,7 +561,7 @@ def isInsufficient():
 
 
 # Returns true if no capture or pawn move has been made in the last 50 moves
-def isDrawByFifty():
+def isDrawByFifty()->bool:
     if curState.lastCapture >= 100 and curState.lastPawnMove >= 100:
         return True
     return False

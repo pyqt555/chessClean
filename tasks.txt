@@ -1,0 +1,17 @@
+Group 1: (important):
+    -Profiling
+    -fix fen generation
+    -replaysystem(for analysis)
+    -engine Vs. engine Chess(implement stockfish, from testpositions,should generate replays)
+Group 2: (sunfish-improvements)
+    -sunfish-3fold(already exists, just needs to be fixed)(just dont make it slower)
+    -test/validate/fix en-passante
+    -sunfish-pawn-eval(pass/double/isolated-pawns)(time target: t<=.1 s for 100000 nodes)
+    -sunfish-king-safety(time target: t<=.05 s for 100000 nodes)
+    -sunfish-trapped(or useless_positioned)-pieces(3 rooks stuck behing enemy pawns while ing gets mated)(time target: t<=.2 s for 100000 nodes)
+    -sunfish-development-initiative(time target: t<=.05 s for 100000 nodes)
+    -numpy-int board representation(probably faster)
+Group 3:(independant)
+    -implement andoma-engine(way simpler, but also slower)
+    -opening-book
+    -(own engine)?
